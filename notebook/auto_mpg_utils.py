@@ -1,28 +1,47 @@
-def convert_categorical_variable(categorical_variables, data):
-    """Function to convert categorical variables in dataset
+from ucimlrepo import fetch_ucirepo
+import pandas as pd
+
+def cast_categorical_variable(categorical_variables, data):
+    """Function to cast categorical variables in dataset to the appropriate data type.
 
     Args:
-        categorical_variable (List): List containing names of categorical variables to convert
-        data (DataFrame): dataset containing names of categorical variables
+        categorical_variable (list-like): list containing names of categorical variables to cast.
+        data (DataFrame): dataset containing names of categorical variables.
 
     Returns:
-        DataFrame: cleaned dataset with converted variables
+        DataFrame: dataset with casted variables.
     """    
     for variable in categorical_variables:
         data[variable] = data[variable].astype(dtype='object')
 
     return data
 
-import pandas as pd
+def data_etl(categorical_variables):
+    """Function to perform data ETL in Auto MPG project.
 
-def data_etl(filepath_or_buffer, categorical_variables):
-    data_cleaned = pd.read_csv(filepath_or_buffer=filepath_or_buffer)
-    data_modeling = convert_categorical_variable(
-        categorical_variables=categorical_variables,
-        data=data_cleaned
+    Args:
+        categorical_variable (list-like): list containing names of categorical variables to cast.
+
+    Returns:
+        DataFrame: data with casted variables and cleaned from missing values.
+    """
+    auto_mpg = fetch_ucirepo(id=9)
+    features = auto_mpg.data.features
+    target = auto_mpg.data.targets
+
+    data_raw = pd.concat(
+        objs=[features, target],
+        axis=1
     )
 
-    return data_modeling
+    data_casted = cast_categorical_variable(
+        categorical_variables=categorical_variables,
+        data=data_raw
+    )
+
+    data_cleaned = data_casted.dropna()
+
+    return data_cleaned
 
 from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
