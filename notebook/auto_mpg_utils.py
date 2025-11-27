@@ -1,5 +1,7 @@
 from ucimlrepo import fetch_ucirepo
 import pandas as pd
+from sklearn.base import BaseEstimator, TransformerMixin
+import numpy as np
 
 def cast_categorical_variable(categorical_variables, data):
     """Function to cast categorical variables in dataset to the appropriate data type.
@@ -43,13 +45,11 @@ def data_etl(categorical_variables):
 
     return data_cleaned
 
-from sklearn.base import BaseEstimator, TransformerMixin
-import numpy as np
-
 class DropLabelsTransformer(BaseEstimator, TransformerMixin):
     """
     Drops rows where specified feature columns contain certain unwanted labels.
     """
+
     def __init__(self, columns=None, labels_to_drop=None):
         self.columns = columns
         self.labels_to_drop = labels_to_drop
@@ -59,28 +59,25 @@ class DropLabelsTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
-        # Drop rows where any specified column has unwanted values
-        mask = X[self.columns].isin(self.labels_to_drop)
+        X = X.copy()
+        mask = X[self.columns].isin(self.labels_to_drop).any(axis=1)
         X_transformed = X.loc[~mask].reset_index(drop=True)
 
         if y is not None:
-            y_transformed = y.loc[~mask].reset_index(drop=True)
+            y_transformed = y[~mask.values]
             return X_transformed, y_transformed
 
         return X_transformed
-    
-    def fit_transform(self, X, y=None):
-        result = self.fit(X).transform(X)
 
-        if y is not None:
-            result = self.fit(X, y).transform(X, y)
-            return result
-        
-        return result
-    
+    def fit_transform(self, X, y=None):
+        return self.fit(X, y).transform(X, y)
+
     def get_feature_names_out(self, input_features=None):
-        input_features = getattr(self, "feature_names_in_")
-        return np.array([feature for feature in input_features if feature not in self.labels_to_drop])
+        return np.array(getattr(self, 'feature_names_in_', input_features))
+    
+    def set_output(self, transform='pandas'):
+        self._transform_output = transform
+        return self
     
 class RatioInteractionTransformer(BaseEstimator, TransformerMixin):
     """
