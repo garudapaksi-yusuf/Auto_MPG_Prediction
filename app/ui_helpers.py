@@ -1,42 +1,46 @@
 """Streamlit UI helpers for the Auto MPG app."""
 
+# enable type hinting for list, system path, & dynamic value
 from collections.abc import Sequence
+from os import PathLike
 from typing import Any
 
 import joblib
 import pandas as pd
 import streamlit as st
 
+# public API variable
 __all__ = [
     "number_input_widget",
     "page_layouts",
     "slider_widget",
     "widget_column_container",
-    "widget_session_state"
+    "widget_session_state",
 ]
 
+# use numbers.Number directly for numeric type hinting
 Number = int | float
 
 
 def _build_prediction_markup(prediction: float) -> str:
     """Return HTML markup for the predicted fuel economy."""
-    return f"""
-    <p style='margin: 0; text-align: center;'>
-        Estimated fuel economy: <font color='red'>{prediction:.2f} MPG</font>
-    </p>
-    """
+    return (
+        "<p style='margin: 0; text-align: center;'>"
+        f"Estimated fuel economy: <font color='red'>{prediction:.2f} MPG</font>"
+        "</p>"
+    )
 
 
 def page_layouts(
-    css_inject: str,
+    css_custom: str,
     body_sidebar: str,
-    width_custom: int,
+    width_custom: str,
     body_title: str,
     text_alignment_custom: str,
     spec_columns: int,
 ) -> tuple[Any, Any, Any, list[Any]]:
     """Create the page shell with custom CSS, a sidebar, title, and columns."""
-    html_custom = st.html(css_inject)
+    html_custom = st.html(css_custom)
     sidebar = st.sidebar.markdown(body_sidebar, width=width_custom)
     title = st.title(body_title, text_alignment=text_alignment_custom)
     widget_columns = st.columns(spec_columns)
@@ -97,22 +101,21 @@ def slider_widget(
 
 def widget_session_state(column: str, value: Any) -> None:
     """Store a value in session state when it has not been set yet."""
+    # use built-in dict method to initialize Session State
     st.session_state.setdefault(column, value)
 
 
 def widget_column_container(
     columns: Sequence[str],
     width_custom: str,
-    model_path: str,
+    model_path: str | PathLike[str],
     index_first: int,
 ) -> Any:
     """Display the predicted fuel economy for the current input values."""
     user_input = {column: st.session_state[column] for column in columns}
     input_df = pd.DataFrame([user_input])
-    container_key = "container"
 
-    with st.container(border=True, key=container_key), st.spinner(width=width_custom):
+    with st.container(border=True, key="container"), st.spinner(width=width_custom):
         model = joblib.load(model_path)
         prediction = model.predict(input_df)[index_first]
-        prediction_markup = _build_prediction_markup(prediction)
-        return st.html(prediction_markup)
+        return st.html(_build_prediction_markup(prediction))
