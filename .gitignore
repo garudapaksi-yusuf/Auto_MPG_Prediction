@@ -1,3 +1,5 @@
-src/__pycache__
+docs
+references
+app/__pycache__
 notebook/__pycache__
-temp
+
