@@ -11,7 +11,7 @@ import pandas as pd
 APP_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = APP_DIR.parent
 MODEL_PATH = PROJECT_DIR / "model" / "model.pkl"
-TRAIN_DATA_PATH = PROJECT_DIR / "data" / "X_train.csv"
+TRAIN_DATA_PATH = PROJECT_DIR / "data" / "X_train_transformed.csv"
 FIRST_INDEX = 0
 LAST_INDEX = -1
 

@@ -1,4 +1,4 @@
-"""Streamlit UI helpers for the Auto MPG app."""
+"""Streamlit user interface helpers for the Auto MPG app."""
 
 # enable type hinting for list, system path, & dynamic value
 from collections.abc import Sequence

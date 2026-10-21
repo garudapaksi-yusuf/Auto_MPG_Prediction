@@ -1,4 +1,4 @@
-from configs import (
+from app_configs import (
     BODY_SIDEBAR,
     BODY_TITLE,
     CSS_CUSTOM,
@@ -13,7 +13,7 @@ from configs import (
     X_TRAIN,
     FeatureSpec,
 )
-from ui_helpers import (
+from app_helpers import (
     number_input_widget,
     page_layouts,
     slider_widget,
