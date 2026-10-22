@@ -62,6 +62,12 @@ This tool forecasts fuel efficiency of the car in Miles Per Gallon (MPG) using G
 
 CSS_CUSTOM = """
 <style>
+    /* remove vertical scrollbar on small viewport */
+    @media (max-height: 700px) {
+        div[data-testid="stMainBlockContainer"] {
+            padding-top: 5.5 rem;
+            padding-bottom: 1rem
+        }
     div[data-testid="stNumberInput"] p {
         font-size: 1rem;
         margin-bottom: 0.5rem
@@ -71,13 +77,13 @@ CSS_CUSTOM = """
         margin-bottom: 0.5rem
     }
     .st-key-container {
-        margin-top: 0.5rem;
+        margin-top: 0.5rem
     }
     .st-key-container [data-testid="stHtml"] p {
-        text-align: center;
+        text-align: center
     }
     div[data-testid="stSpinner"] > div {
-        justify-content: center; /* alignment for spinner icon and text */
+        justify-content: center /* alignment for spinner icon and text */
     }
 </style>
 """

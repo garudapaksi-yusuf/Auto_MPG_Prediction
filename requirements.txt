@@ -8,3 +8,4 @@ pyampute==0.0.1
 seaborn==0.13.2
 scikit-learn==1.8.0
 statsmodels==0.14.6
+streamlit==1.66.1
