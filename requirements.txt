@@ -1,0 +1,10 @@
+feature_engine==1.9.4
+dython==0.7.12
+matplotlib==3.10.9
+numpy==2.4.4
+pandas==2.3.3
+patsy==1.0.2
+pyampute==0.0.1
+seaborn==0.13.2
+scikit-learn==1.8.0
+statsmodels==0.14.6

@@ -14,27 +14,10 @@ NOTEBOOK_DIR = Path.cwd()
 SEED = 42
 RARE_COLUMN, RARE_VALUES = "cylinders", [3, 5]
 
+
 class DropValues(BaseEstimator, TransformerMixin):
-    """DropValues class for removing specified values from a given column in a DataFrame.
-    
-    This transformer is designed to be used with scikit-learn's pipeline 
-    and allows for the removal of rows in a DataFrame where the specified column contains certain values.
-    
-    Attributes:
-        column (str): The name of the column from which to drop values.
-        values (list): A list of values to be removed from the specified column.
-    
-    Methods:
-        fit(X, y=None):
-            Fits the transformer to the data. This method is a no-op for this transformer.
-    
-        transform(X):
-            Removes rows from the DataFrame where the specified column contains any of the values to be dropped.
-    
-    Args:
-        column (str): The name of the column to process.
-        values (str or list): The value(s) to drop from the specified column. Can be a single value or a list of values.
-    """
+    """Remove rows whose specified column contains any of the given values."""
+
     def __init__(self, column, values):
         self.column = column
         self.values = values if isinstance(values, list) else [values]
@@ -43,82 +26,74 @@ class DropValues(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
-        X = pd.DataFrame(X).copy()
-        mask = ~X[self.column].isin(self.values)
-        return X.loc[mask]
+        data = pd.DataFrame(X).copy()
+        keep_rows = ~data[self.column].isin(self.values)
+        return data.loc[keep_rows]
 
-def data_raw_etl(id):
-    """Fetches raw dataset from the UCI repository and prepares it for analysis.
-    
-    Args:
-        id (int): The identifier for the dataset to be fetched from the UCI repository.
-    
-    Returns:
-        pd.DataFrame: A DataFrame containing the features and target variables of the dataset.
-    """
-    ucirepo_dotdict = fetch_ucirepo(id=id)
 
-    features = ucirepo_dotdict.data.features
-    target = ucirepo_dotdict.data.targets
+def data_raw_etl(dataset_id):
+    """Fetch and combine features and target from a UCI dataset."""
+    dataset = fetch_ucirepo(id=dataset_id)
+    features = dataset.data.features
+    target = dataset.data.targets
 
-    data_raw = pd.concat([features, target], axis=AXIS_COLUMNS)
+    return pd.concat([features, target], axis=AXIS_COLUMNS)
 
-    return data_raw
 
 def data_inspect(data):
-    inspection_summary = pd.DataFrame({
-        "dtype": data.dtypes,
-        "sample": [data[column].unique() for column in data.columns],
-        "min": [data[column].min() for column in data.columns],
-        "max": [data[column].max() for column in data.columns],
-        "duplicated": data.duplicated().sum(),
-        "missing": data.isna().sum()
-    })
+    """Summarize column types, unique values, ranges, duplicates, and missing data."""
+    return pd.DataFrame(
+        {
+            "dtype": data.dtypes,
+            "sample": [data[column].unique() for column in data.columns],
+            "min": [data[column].min() for column in data.columns],
+            "max": [data[column].max() for column in data.columns],
+            "duplicated": data.duplicated().sum(),
+            "missing": data.isna().sum(),
+        }
+    )
 
-    return inspection_summary
 
 def match_transformer(column):
-    transformer = MatchCategories(
+    """Create a transformer that normalizes categories in the given column."""
+    return MatchCategories(
         column,
-        ignore_format=True # allow transformer on variables with non-string data type (e.g., numeric)
+        ignore_format=True,
     )
 
-    return transformer
+
+def match_data(column, data):
+    """Match categories in a column and return the transformed DataFrame."""
+    transformer = match_transformer(column)
+    return pd.DataFrame(
+        transformer.fit_transform(data),
+        columns=transformer.get_feature_names_out(),
+    )
+
 
 def data_cleaned_etl():
+    """Load cleaned dataset saved by the initial analysis notebook."""
     data_dir = NOTEBOOK_DIR.parent / "data"
     data_path = data_dir / "data_cleaned.csv"
-    data_cleaned = pd.read_csv(
+    return pd.read_csv(
         data_path,
-        index_col=FIRST_COLUMN_INDEX # use column position `0` as row label
+        index_col=FIRST_COLUMN_INDEX,
     )
 
-    return data_cleaned
 
 def random_number_generator(seed):
+    """Create a reproducible NumPy random number generator."""
     return np.random.RandomState(seed)
 
-def inspect_dimensionality(dataset, train, test):
-    """Performs dimensionality analysis of the dataset and its train-test subsets.
 
-    Args:
-        dataset (pd.DataFrame): The original dataset.
-        train (pd.DataFrame): The training subset of the dataset.
-        test (pd.DataFrame): The testing subset of the dataset.
-        
-    Returns:
-        pd.DataFrame: A DataFrame summarizing the number of rows, row ratio, 
-        and number of columns for the dataset and its subsets.
-    """
-    row, column = 0, 1
-    dimensionality_summary = pd.DataFrame({
-        "row_n": [dataset.shape[row], train.shape[row], test.shape[row]],
-        "row_ratio": [
-            dataset.shape[row] / dataset.shape[row],
-            train.shape[row] / dataset.shape[row],
-            test.shape[row] / dataset.shape[row]
-        ],
-        "column": [dataset.shape[column], train.shape[column], test.shape[column]]
-    }, index=["dataset", "train", "test"])
-    
-    return dimensionality_summary
+def inspect_dimensionality(dataset, train, test):
+    """Compare row counts, row proportions, and column counts across data splits."""
+    row_count = len(dataset)
+    return pd.DataFrame(
+        {
+            "row_n": [row_count, len(train), len(test)],
+            "row_ratio": [1, len(train) / row_count, len(test) / row_count],
+            "column": [dataset.shape[1], train.shape[1], test.shape[1]],
+        },
+        index=["dataset", "train", "test"],
+    )
